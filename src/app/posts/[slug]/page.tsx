@@ -1,13 +1,10 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getAllPosts, getPostBySlug } from "@/lib/api";
-import { CMS_NAME } from "@/lib/constants";
 import markdownToHtml from "@/lib/markdownToHtml";
-import Alert from "@/app/_components/alert";
-import Container from "@/app/_components/container";
-import Header from "@/app/_components/header";
 import { PostBody } from "@/app/_components/post-body";
 import { PostHeader } from "@/app/_components/post-header";
+import PostFooter from "@/app/_components/post-footer";
 
 export default async function Post(props: Params) {
   const params = await props.params;
@@ -19,12 +16,29 @@ export default async function Post(props: Params) {
 
   const content = await markdownToHtml(post.content || "");
 
+  // JSON-LD 구조화된 데이터
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.excerpt,
+    image: post.ogImage.url,
+    datePublished: post.date,
+    author: {
+      "@type": "Person",
+      name: post.author.name,
+      image: post.author.picture,
+    },
+  };
+
   return (
-    <main>
-      <Alert preview={post.preview} />
-      <Container>
-        <Header />
-        <article className="mb-32">
+    <main className="bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <article className="pt-8 md:pt-12 pb-16 md:pb-24 px-6 md:px-12">
+        <div className="container-narrow">
           <PostHeader
             title={post.title}
             coverImage={post.coverImage}
@@ -32,8 +46,9 @@ export default async function Post(props: Params) {
             author={post.author}
           />
           <PostBody content={content} />
-        </article>
-      </Container>
+          <PostFooter />
+        </div>
+      </article>
     </main>
   );
 }
@@ -52,12 +67,27 @@ export async function generateMetadata(props: Params): Promise<Metadata> {
     return notFound();
   }
 
-  const title = `${post.title} | Next.js Blog Example with ${CMS_NAME}`;
+  const title = `${post.title}`;
+  const url = `https://yourdomain.com/posts/${params.slug}`;
 
   return {
-    title,
+    title: `${title} | 깔끔한 친구들`,
+    description: post.excerpt,
+    keywords: [post.title],
+    authors: [{ name: post.author.name }],
     openGraph: {
+      type: "article",
       title,
+      description: post.excerpt,
+      images: [post.ogImage.url],
+      publishedTime: post.date,
+      authors: [post.author.name],
+      url,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: post.excerpt,
       images: [post.ogImage.url],
     },
   };

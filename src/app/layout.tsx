@@ -1,19 +1,34 @@
 import Footer from "@/app/_components/footer";
-import { CMS_NAME, HOME_OG_IMAGE_URL } from "@/lib/constants";
+import Header from "@/app/_components/header";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import cn from "classnames";
 import { ThemeSwitcher } from "./_components/theme-switcher";
 
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
-
 export const metadata: Metadata = {
-  title: `Next.js Blog Example with ${CMS_NAME}`,
-  description: `A statically generated blog example using Next.js and ${CMS_NAME}.`,
+  title: "깔끔한 친구들",
+  description: "천천히 읽어주세요. 깔끔하지만 따뜻한 공간입니다.",
+  metadataBase: new URL("https://yourdomain.com"),
+  alternates: {
+    canonical: "https://yourdomain.com",
+  },
   openGraph: {
-    images: [HOME_OG_IMAGE_URL],
+    title: "깔끔한 친구들",
+    description: "천천히 읽어주세요. 깔끔하지만 따뜻한 공간입니다.",
+    type: "website",
+    url: "https://yourdomain.com",
+    locale: "ko_KR",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 
@@ -23,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ko" suppressHydrationWarning>
       <head>
         <link
           rel="apple-touch-icon"
@@ -46,23 +61,23 @@ export default function RootLayout({
         <link
           rel="mask-icon"
           href="/favicon/safari-pinned-tab.svg"
-          color="#000000"
+          color="#A68572"
         />
         <link rel="shortcut icon" href="/favicon/favicon.ico" />
-        <meta name="msapplication-TileColor" content="#000000" />
+        <meta name="msapplication-TileColor" content="#FCFAF8" />
         <meta
           name="msapplication-config"
           content="/favicon/browserconfig.xml"
         />
-        <meta name="theme-color" content="#000" />
-        <link rel="alternate" type="application/rss+xml" href="/feed.xml" />
+        <meta name="theme-color" content="#FCFAF8" />
       </head>
-      <body
-        className={cn(inter.className, "dark:bg-slate-900 dark:text-slate-400")}
-      >
+      <body className="bg-background text-text font-sans antialiased">
         <ThemeSwitcher />
-        <div className="min-h-screen">{children}</div>
-        <Footer />
+        <Header />
+        <div className="min-h-screen flex flex-col">
+          {children}
+          <Footer />
+        </div>
       </body>
     </html>
   );

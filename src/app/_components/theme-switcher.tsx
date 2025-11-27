@@ -57,37 +57,64 @@ let updateDOM: () => void;
  * Switch button to quickly toggle user preference.
  */
 const Switch = () => {
-  const [mode, setMode] = useState<ColorSchemePreference>(
-    () =>
-      ((typeof localStorage !== "undefined" &&
-        localStorage.getItem(STORAGE_KEY)) ??
-        "system") as ColorSchemePreference,
-  );
+  const [mode, setMode] = useState<ColorSchemePreference>("system");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // store global functions to local variables to avoid any interference
-    updateDOM = window.updateDOM;
+    // Mark as mounted to enable rendering
+    setMounted(true);
+    
+    // Initialize with stored value
+    const storedMode = (
+      (typeof localStorage !== "undefined" &&
+        localStorage.getItem(STORAGE_KEY)) ??
+        "system"
+    ) as ColorSchemePreference;
+    setMode(storedMode);
+
+    // store global function
+    if (typeof window !== "undefined" && window.updateDOM) {
+      updateDOM = window.updateDOM;
+    }
+    
     /** Sync the tabs */
-    addEventListener("storage", (e: StorageEvent): void => {
-      e.key === STORAGE_KEY && setMode(e.newValue as ColorSchemePreference);
-    });
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY && e.newValue) {
+        setMode(e.newValue as ColorSchemePreference);
+      }
+    };
+    
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+    
     localStorage.setItem(STORAGE_KEY, mode);
-    updateDOM();
-  }, [mode]);
+    if (typeof window !== "undefined" && window.updateDOM) {
+      window.updateDOM();
+    }
+  }, [mode, mounted]);
 
   /** toggle mode */
   const handleModeSwitch = () => {
     const index = modes.indexOf(mode);
     setMode(modes[(index + 1) % modes.length]);
   };
+  
+  // Don't render button until mounted to avoid hydration mismatch
+  if (!mounted) {
+    return null;
+  }
+  
   return (
     <button
       suppressHydrationWarning
       className={styles.switch}
       onClick={handleModeSwitch}
+      aria-label="테마 전환"
+      title={`현재: ${mode === 'system' ? '시스템' : mode === 'dark' ? '다크' : '라이트'} 모드`}
     />
   );
 };
